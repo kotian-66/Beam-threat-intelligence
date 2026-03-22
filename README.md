@@ -35,7 +35,7 @@ Make sure you have the following before running:
 ### Step 1 — Clone or download this file
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/beam-threat-intelligence.git
+https://github.com/kotian-66/Beam-threat-intelligence.git
 cd beam-threat-intelligence
 ```
 
@@ -161,7 +161,7 @@ for ioc in iocs:  # remove [:5] for full run
 
 ```
 requests==2.31.0
-elasticsearch==8.9.0
+elasticsearch==7.17.6
 ```
 
 Install:
@@ -189,6 +189,3 @@ def fetch_otx():
 
 ---
 
-## 📜 License
-
-MIT License — free to use, modify, and distribute.
