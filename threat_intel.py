@@ -18,7 +18,7 @@ def check_elasticsearch():
 
 def fetch_otx():
     url = "https://otx.alienvault.com/api/v1/pulses/subscribed"
-    headers = {"X-OTX-API-KEY": "e04b4b90762226c1e337fda7ed7453ea5ca744111cfd20a4be455dec15e3ff59"}
+    headers = {"X-OTX-API-KEY": "Your-api-key"}
     try:
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
