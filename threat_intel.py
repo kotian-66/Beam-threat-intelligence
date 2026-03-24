@@ -3,10 +3,8 @@ from elasticsearch import Elasticsearch
 import time
 import os
 
-# Connect to Elasticsearch
 es = Elasticsearch("http://localhost:9200")
 
-# Check Elasticsearch is acturlly running before starting
 def check_elasticsearch():
     try:
         if es.ping():
@@ -18,10 +16,9 @@ def check_elasticsearch():
         print(f"❌ Elasticsearch error: {e}")
         exit()
 
-# Fetch threat feed
 def fetch_otx():
     url = "https://otx.alienvault.com/api/v1/pulses/subscribed"
-    headers = {"X-OTX-API-KEY": "YOUR_API_KEY"} # <- Replace this with your OTX-API key
+    headers = {"X-OTX-API-KEY": "e04b4b90762226c1e337fda7ed7453ea5ca744111cfd20a4be455dec15e3ff59"}
     try:
         response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
@@ -30,7 +27,6 @@ def fetch_otx():
         print(f"❌ Failed to fetch OTX data: {e}")
         return {"results": []}
 
-# Extract IOCs only ipv4 blocking
 def extract_iocs(data):
     iocs = []
     for pulse in data.get("results", []):
@@ -40,7 +36,6 @@ def extract_iocs(data):
             iocs.append({"value": ioc_value, "type": ioc_type})
     return iocs
 
-# Send to SIEM
 def push_to_siem(iocs):
     for ioc in iocs:
         try:
@@ -51,14 +46,21 @@ def push_to_siem(iocs):
         except Exception as e:
             print(f"❌ Failed to push to SIEM: {e}")
 
-# Blocking only ipv4
-def block_ip(ioc):
+def handle_ioc(ioc):
     if ioc["type"] == "IPv4":
-        print(f"🚫 Blocking IP: {ioc['value']}")
+        print(f"🚫 Blocking IP:              {ioc['value']}")
+    elif ioc["type"] == "domain":
+        print(f"🌐 Malicious Domain flagged: {ioc['value']}")
+    elif ioc["type"] == "URL":
+        print(f"🔗 Malicious URL flagged:    {ioc['value']}")
+    elif "FileHash" in ioc["type"]:
+        print(f"🧬 Malicious Hash flagged:   {ioc['value']}")
+    elif ioc["type"] == "hostname":
+        print(f"🖥️  Malicious Hostname:       {ioc['value']}")
+    elif ioc["type"] == "CVE":
+        print(f"🔴 CVE Vulnerability found:  {ioc['value']}")
     else:
-        print(f"⚠️  Skipping: {ioc['value']} (type: {ioc['type']})")
-
-# Automation Loop
+        print(f"📌 IOC logged:               {ioc['value']} (type: {ioc['type']})")
 check_elasticsearch()
 
 while True:
@@ -67,7 +69,7 @@ while True:
     iocs = extract_iocs(data)
     print(f"✅ Found {len(iocs)} IOCs")
     push_to_siem(iocs)
-    for ioc in iocs[:5]:
-        block_ip(ioc)
+    for ioc in iocs:
+        handle_ioc(ioc)
     print("✅ Cycle complete. Waiting 5 minutes...\n")
     time.sleep(300)
